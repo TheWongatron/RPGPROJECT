@@ -2,15 +2,18 @@ import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.Queue;
 import javax.swing.*;
+import java.io.FileWriter;
+import java.util.Scanner;
 
-public class Game extends JPanel implements Runnable, KeyListener, MouseListener,
-    
-    MouseMotionListener{    
+
+
+public class Game extends JPanel implements Runnable, KeyListener, MouseListener, MouseMotionListener{    
     private BufferedImage back;
     private int key, x, y;
     private Characters player;
@@ -19,7 +22,7 @@ public class Game extends JPanel implements Runnable, KeyListener, MouseListener
     private ArrayList <Ranged> rangedWeap;
     private Timer gameTimer; // Add a single Timer for updates
     private Font customFont;
-
+    private File saveFile;
     private Queue <Enemy> enemies;
     private ImageIcon startBg;
     private ImageIcon selectionBg;
@@ -34,6 +37,7 @@ public class Game extends JPanel implements Runnable, KeyListener, MouseListener
         this.addKeyListener(this);
         this.addMouseListener(this);
         this.addMouseMotionListener(this);
+        saveFile=new File("saved_file2.0.txt");
         key =-1;
         x=0;
         y=0;
@@ -57,7 +61,45 @@ public class Game extends JPanel implements Runnable, KeyListener, MouseListener
         gameTimer.start();
     }
 
-    
+    public void createFile(){
+        try {
+            if(saveFile.createNewFile()){
+                System.out.println("Successfully created file!");
+            }
+            else {
+                System.out.println("File already exists!");
+            }
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+    }
+    public void readFile(){
+        Scanner sc;
+        try {
+            sc = new Scanner(saveFile);
+            while(sc.hasNext()){
+                System.out.println(sc.nextInt());
+        } catch (FileNotFoundException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+    }
+    public void writeToFile(){
+        try {
+        FileWriter myWriter = new FileWriter(saveFile);
+
+        //write whatever you want to save
+        if(enemies.isEmpty()){
+            myWriter.write("win!");
+        }
+        else {
+            myWriter.write("You have "+enemies.size()+" enemies left");
+            myWriter.close();
+        System.out.println("Successfully wrote to file");
+        }
+    }
+    }
     private void updateProjectiles() {
         for (int i = 0; i < projectiles.size(); i++) {
             Projectile proj = projectiles.get(i);
@@ -104,7 +146,7 @@ public class Game extends JPanel implements Runnable, KeyListener, MouseListener
         player.drawChar(g2d);
         
         // Display selected message and player stats
-        g2d.setFont(new Font("Cuckoo", Font.BOLD, 50));
+        g2d.setFont(new Font("Broadway", Font.BOLD, 50));
         String selectedMessage = "You selected: " + player.toString();
         g2d.drawString(selectedMessage, 410, 700);
         
@@ -171,6 +213,7 @@ public void drawStartScreen (Graphics g2d){
     g2d.drawImage(startBg.getImage(), 0,0,getWidth(), getHeight(), this);
     g2d.drawImage(startBg.getImage(), 0,0,getWidth(), getHeight(), this);
     g2d.drawImage(logo.getImage(), 450 ,0, 800, 400, this);
+    g2d.setFont( new Font("Broadway", Font.BOLD, 50));
     g2d.drawString("Choose Your Character",600,800);
     g2d.drawString("Press the number to select",600,850);
     g2d.setFont( new Font("chiller", Font.BOLD, 50));
