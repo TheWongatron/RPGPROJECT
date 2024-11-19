@@ -9,8 +9,8 @@ public class Projectile {
     public Projectile(int startX, int startY) {
         this.x = startX;
         this.y = startY;
-        this.speed = 100; // Adjust speed as needed
-        this.image = new ImageIcon("blastoiseattack.png"); // Load your projectile image
+        this.speed = 50; // Adjust speed as needed
+        this.image = new ImageIcon("charizardattack.png"); // Load your projectile image
     }
 
     public void move() {

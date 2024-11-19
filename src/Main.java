@@ -13,7 +13,7 @@ import java.awt.event.*;
             setSize(WIDTH, HEIGHT);
             Game play = new Game();
             ((Component) play).setFocusable(true);
-        Color RoyalBlue = new Color(22,13,193);
+        
 
         getContentPane().add(play);
         setVisible(true);
@@ -21,43 +21,43 @@ import java.awt.event.*;
 
             @Override
             public void windowActivated(WindowEvent e) {
-                // TODO Auto-generated method stub
+                
 
             }
 
             @Override
             public void windowClosed(WindowEvent e) {
-                // TODO Auto-generated method stub
+                
 
             }
 
             @Override
             public void windowClosing(WindowEvent e) {
-                // TODO Auto-generated method stub
+                
                 play.writeToFile();
             }
 
             @Override
             public void windowDeactivated(WindowEvent e) {
-                // TODO Auto-generated method stub
+                
 
             }
 
             @Override
             public void windowDeiconified(WindowEvent e) {
-                // TODO Auto-generated method stub
+                
 
             }
 
             @Override
             public void windowIconified(WindowEvent e) {
-                // TODO Auto-generated method stub
+                
 
             }
 
             @Override
             public void windowOpened(WindowEvent e) {
-                // TODO Auto-generated method stub
+                
                 play.createFile();
                 play.readFile();            }
 
@@ -67,6 +67,7 @@ import java.awt.event.*;
 
 
     public static void main(String[] args) {
+    @SuppressWarnings("unused")
     Main run = new Main();
 
 

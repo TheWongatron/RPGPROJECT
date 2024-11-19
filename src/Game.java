@@ -10,6 +10,7 @@ import java.util.Queue;
 import javax.swing.*;
 import java.io.FileWriter;
 import java.util.Scanner;
+import java.util.Random;
 
 
 
@@ -28,6 +29,8 @@ public class Game extends JPanel implements Runnable, KeyListener, MouseListener
     private ImageIcon selectionBg;
     private ImageIcon gameBg;
     private ImageIcon logo;
+    private ImageIcon winBg;
+    private ImageIcon loseBg;
     private static final int MOVE_SPEED = 50;
     private ArrayList<Projectile> projectiles; // List to hold projectiles
 
@@ -49,11 +52,22 @@ public class Game extends JPanel implements Runnable, KeyListener, MouseListener
         selectionBg = new ImageIcon("startscreen.jpg");
         gameBg = new ImageIcon("cave.png");
         logo = new ImageIcon("pokemon.png");
+        winBg = new ImageIcon("win.jpg");
+        loseBg = new ImageIcon("lose.jpg");
         screen="start";
         rangedWeap = new ArrayList <Ranged>();
         enemies = setEs();
         System.out.println(enemies.size());
         projectiles = new ArrayList<>();
+        // Load the custom font
+        try {
+        // Load the custom font once
+        customFont = Font.createFont(Font.TRUETYPE_FONT, new File("Pokemon Classic.ttf")).deriveFont(70f);
+        GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+        ge.registerFont(customFont);
+        } catch (IOException | FontFormatException e) {
+        e.printStackTrace();
+    }
         gameTimer = new Timer(30, e -> {
             updateProjectiles();  // Move and handle projectiles
             repaint();            // Redraw the panel
@@ -70,7 +84,7 @@ public class Game extends JPanel implements Runnable, KeyListener, MouseListener
                 System.out.println("File already exists!");
             }
         } catch (IOException e) {
-            // TODO Auto-generated catch block
+            
             e.printStackTrace();
         }
     }
@@ -80,8 +94,11 @@ public class Game extends JPanel implements Runnable, KeyListener, MouseListener
             sc = new Scanner(saveFile);
             while(sc.hasNext()){
                 System.out.println(sc.nextInt());
-        } catch (FileNotFoundException e) {
-            // TODO Auto-generated catch block
+        
+            }
+        } 
+        catch (FileNotFoundException e) {
+            
             e.printStackTrace();
         }
     }
@@ -98,7 +115,10 @@ public class Game extends JPanel implements Runnable, KeyListener, MouseListener
             myWriter.close();
         System.out.println("Successfully wrote to file");
         }
-    }
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+        }
     }
     private void updateProjectiles() {
         for (int i = 0; i < projectiles.size(); i++) {
@@ -132,49 +152,24 @@ public class Game extends JPanel implements Runnable, KeyListener, MouseListener
 
     public Queue <Enemy> setEs(){
         Queue <Enemy> temp = new LinkedList <>();
-        temp.add(new Mewtwo(100,100));
-        temp.add(new Mewtwo(200,200));
-        temp.add(new Mewtwo(300,300));
+        Random rand = new Random();
+        for (int i = 0; i < 100; i++) 
+        {
+            temp.add(new Mewtwo(rand.nextInt(1000), rand.nextInt(800)));
+        }
         return temp;
-    }
-
-    public void drawSelectionScreen(Graphics g2d) {
-        // Draw the selection background first
-        g2d.drawImage(selectionBg.getImage(), 0, 0, getWidth(), getHeight(), this);
-        
-        // Then draw the player's character
-        player.drawChar(g2d);
-        
-        // Display selected message and player stats
-        g2d.setFont(new Font("Broadway", Font.BOLD, 50));
-        String selectedMessage = "You selected: " + player.toString();
-        g2d.drawString(selectedMessage, 410, 700);
-        
-        g2d.setFont(new Font("Nunito", Font.BOLD, 30));
-        String speed = "Speed: " + player.getSpeed();
-        String damage = "Strength: " + player.getDamage();
-        String health = "Health: " + player.getHealth();
-        String stam = "Stamina: " + player.getStam();
-        int statsX = 430;
-        int statsY = 750;
-        g2d.drawString(speed, statsX, statsY);
-        statsY += 30;
-        g2d.drawString(damage, statsX, statsY);
-        statsY += 30;
-        g2d.drawString(health, statsX, statsY);
-        statsY += 30;
-        g2d.drawString(stam, statsX, statsY);
     }
 
     public void run() {
         try {
             while (true) {
-                Thread.currentThread().sleep(5);
+                Thread.currentThread();
+                Thread.sleep(5);
                 updateProjectiles(); // Call to update projectiles
                 repaint();
             }
         
-            catch (Exception e) {
+        catch (Exception e) {
             e.printStackTrace();
         }
     }
@@ -213,10 +208,10 @@ public void drawStartScreen (Graphics g2d){
     g2d.drawImage(startBg.getImage(), 0,0,getWidth(), getHeight(), this);
     g2d.drawImage(startBg.getImage(), 0,0,getWidth(), getHeight(), this);
     g2d.drawImage(logo.getImage(), 450 ,0, 800, 400, this);
-    g2d.setFont( new Font("Broadway", Font.BOLD, 50));
-    g2d.drawString("Choose Your Character",600,800);
-    g2d.drawString("Press the number to select",600,850);
-    g2d.setFont( new Font("chiller", Font.BOLD, 50));
+    g2d.setFont( new Font("Pokemon Classic", Font.BOLD, 15));
+    g2d.drawString("Choose Your Character",450,800);
+    g2d.drawString("Press the number to select",450,850);
+    g2d.setFont( new Font("Pokemon Classic", Font.BOLD, 50));
     g2d.drawString("1",350,500);
     g2d.drawString("2",720,500);
     g2d.drawString("3",1120,500);
@@ -226,6 +221,59 @@ public void drawStartScreen (Graphics g2d){
         System.out.println(c);
         c.drawChar(g2d);
         }
+}
+public void drawSelectionScreen(Graphics g2d) {
+    // Draw the selection background first
+    g2d.drawImage(selectionBg.getImage(), 0, 0, getWidth(), getHeight(), this);
+    
+    // Then draw the player's character
+    player.drawChar(g2d);
+    
+    // Display selected message and player stats
+    g2d.setFont(new Font("Pokemon Classic", Font.BOLD, 40));
+    String selectedMessage = "You selected: " + player.toString();
+    g2d.drawString(selectedMessage, 410, 650);
+    
+    g2d.setFont(new Font("Pokemon Classic", Font.BOLD, 30));
+    String speed = "Speed: " + player.getSpeed();
+    String damage = "Strength: " + player.getDamage();
+    String health = "Health: " + player.getHealth();
+    String stam = "Stamina: " + player.getStam();
+    int statsX = 430;
+    int statsY = 750;
+    g2d.drawString(speed, statsX, statsY);
+    statsY += 30;
+    g2d.drawString(damage, statsX, statsY);
+    statsY += 30;
+    g2d.drawString(health, statsX, statsY);
+    statsY += 30;
+    g2d.drawString(stam, statsX, statsY);
+}
+
+public void drawGameScreen(Graphics g2d) {
+    g2d.drawImage(gameBg.getImage(), 0, 0, getWidth(), getHeight(), this);
+    player.drawChar(g2d);
+
+    // Draw projectiles
+    for (Projectile proj : projectiles) {
+        proj.draw(g2d);
+    }
+
+    // Draw enemies
+    if (enemies.peek() != null)
+        (enemies.peek()).drawChar(g2d); 
+}
+public void drawWinScreen(Graphics g2d) {
+    g2d.drawImage(winBg.getImage(), 0, 0, getWidth(), getHeight(), this);
+    g2d.setFont(new Font("Pokemon Classic", Font.BOLD, 40));
+    g2d.setColor(Color.black);
+    g2d.drawString("Winner, winner, PokéDinner!", 950, 400);
+}
+public void drawLoseScreen(Graphics g2d) {
+    g2d.drawImage(loseBg.getImage(), 0, 0, getWidth(), getHeight(), this);
+    g2d.setFont(new Font("Pokemon Classic", Font.BOLD, 40));
+    g2d.setColor(Color.black);
+    g2d.drawString("Winner, winner, PokéDinner!", 950, 400);
 }
 
 
@@ -241,7 +289,7 @@ public void attack(){
 //DO NOT DELETE
 @Override
 public void keyTyped(KeyEvent e) {
-// TODO Auto-generated method stub
+
 }
 //DO NOT DELETE
 @Override
@@ -256,7 +304,10 @@ public void keyPressed(KeyEvent e) {
     } else if (key == KeyEvent.VK_ENTER) {
         screen = "gameplay";
         repaint();
-    } if (key == KeyEvent.VK_SPACE) {
+    } else if (key == KeyEvent.VK_W) { // Check if "W" key is pressed
+        screen = "win";
+        repaint();
+    } if (key == KeyEvent.VK_SPACE){
         System.out.println("Space key pressed");
         shootProjectile();
     }
@@ -286,6 +337,8 @@ public void keyPressed(KeyEvent e) {
     repaint();
 }
 
+            
+
 
 
 
@@ -301,45 +354,38 @@ public void keyReleased(KeyEvent e) {
 }
 @Override
 public void mouseDragged(MouseEvent arg0) {
-// TODO Auto-generated method stub
+
 }
 @Override
 public void mouseMoved(MouseEvent arg0) {
-// TODO Auto-generated method stub
+
 x=arg0.getX();
 y=arg0.getY();
 }
 
     private void drawScreen(Graphics g2d) {
-    switch (screen) {
-        case "start":
-        drawStartScreen(g2d);
-        break;
+        switch (screen) {
+            case "start":
+                drawStartScreen(g2d);
+                break;
             case "selection":
                 drawSelectionScreen(g2d);
                 break;
-        case "gameplay":
+            case "gameplay":
                 drawGameScreen(g2d);
+                break;
+            case "win":
+                drawWinScreen(g2d);
+                break;
 
     }
     }
-    public void drawGameScreen(Graphics g2d) {
-        g2d.drawImage(gameBg.getImage(), 0, 0, getWidth(), getHeight(), this);
-        player.drawChar(g2d);
+   
     
-        // Draw projectiles
-        for (Projectile proj : projectiles) {
-            proj.draw(g2d);
-        }
-    
-        // Draw enemies
-        if (enemies.peek() != null)
-            (enemies.peek()).drawChar(g2d); 
-    }
     
 @Override
 public void mouseClicked(MouseEvent arg0) {
-// TODO Auto-generated method stub
+
 //check to see if on start screen
 //for loop to check through al mainChars
 //if mousecollision is true
@@ -349,7 +395,7 @@ public void mouseClicked(MouseEvent arg0) {
 
 @Override
 public void mouseEntered(MouseEvent arg0) {
-// TODO Auto-generated method stub
+
 System.out.println("entered");
 }
 
@@ -357,18 +403,18 @@ System.out.println("entered");
 
 @Override
 public void mouseExited(MouseEvent arg0) {
-// TODO Auto-generated method stub
+
 System.out.println("exited");
 }
 @Override
 public void mousePressed(MouseEvent arg0) {
-// TODO Auto-generated method stub
+
 System.out.println("you clicked at"+ arg0.getY());
 x=arg0.getX();
 y=arg0.getY();
 }
 @Override
 public void mouseReleased(MouseEvent arg0) {
-// TODO Auto-generated method stub
+
 }
 }
