@@ -5,12 +5,14 @@ public class Projectile {
     private int x, y;
     private int speed;
     private ImageIcon image;
+    
+    
+        public Projectile(int startX, int startY) {
+            this.x = startX;
+            this.y = startY;
+            this.speed = 50; // Adjust speed as needed
+            this.image = new ImageIcon("blastoiseattack.png"); // Load your projectile image
 
-    public Projectile(int startX, int startY) {
-        this.x = startX;
-        this.y = startY;
-        this.speed = 50; // Adjust speed as needed
-        this.image = new ImageIcon("charizardattack.png"); // Load your projectile image
     }
 
     public void move() {

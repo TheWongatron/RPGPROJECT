@@ -19,6 +19,7 @@ public class Game extends JPanel implements Runnable, KeyListener, MouseListener
     private int key, x, y;
     private Characters player;
     private final ArrayList <Characters> charList;
+    private final ArrayList <Ranged> attList;
     private String screen;
     private final ArrayList <Ranged> rangedWeap;
     private final Timer gameTimer; // Add a single Timer for updates
@@ -48,6 +49,10 @@ public class Game extends JPanel implements Runnable, KeyListener, MouseListener
         charList = setCharList();
         for(final Characters c: charList){
             System.out.println(c);
+        }
+        attList = setAttList();
+        for(final Ranged a: attList){
+            System.out.println(a);
         }
         startBg = new ImageIcon("startscreen.jpg");
         selectionBg = new ImageIcon("startscreen.jpg");
@@ -147,6 +152,7 @@ public class Game extends JPanel implements Runnable, KeyListener, MouseListener
     public void shootProjectile() {
         final int startX = player.getX() + player.getW() - 400; // Position just outside the player
         final int startY = player.getY() + player.getH() / 8; // Center vertically
+        
         projectiles.add(new Projectile(startX, startY));
     }
     public Queue <Enemy> setEs(){
@@ -176,6 +182,14 @@ public class Game extends JPanel implements Runnable, KeyListener, MouseListener
         temp.add(new Venasaur(500,400));
         temp.add(new Blastoise(900,360));
         temp.add(new Charizard(1300,360));
+        return temp;
+    }
+    public ArrayList <Ranged> setAttList(){
+        final ArrayList <Ranged> temp = new ArrayList <>();
+        temp.add(new Thunder(100,380));
+        temp.add(new Leaf(500,400));
+        temp.add(new Water(900,360));
+        temp.add(new Fire(1300,360));
         return temp;
     }
     public void paint(final Graphics g){
