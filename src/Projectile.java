@@ -4,19 +4,19 @@ import javax.swing.ImageIcon;
 public class Projectile {
     private int x, y;
     private int speed;
+    private int directionX;
     private ImageIcon image;
-    
-    
-        public Projectile(int startX, int startY) {
-            this.x = startX;
-            this.y = startY;
-            this.speed = 50; // Adjust speed as needed
-            this.image = new ImageIcon("blastoiseattack.png"); // Load your projectile image
 
+    public Projectile(int startX, int startY, String imagePath, int directionX) {
+        this.x = startX;
+        this.y = startY;
+        this.speed = 50; // Adjust speed as needed
+        this.directionX = directionX;
+        this.image = new ImageIcon(imagePath); // Load the specified projectile image
     }
 
     public void move() {
-        x -= speed; // Move projectile to the right
+        x += speed * directionX; // Move projectile to the left (for enemy projectiles)
     }
 
     public void draw(Graphics g) {
@@ -32,6 +32,7 @@ public class Projectile {
     }
 
     public boolean isOffScreen(int width) {
-        return x > width; // Check if the projectile is off-screen
+        return x < 0; // Check if the projectile is off-screen
     }
 }
+

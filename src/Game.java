@@ -19,9 +19,8 @@ public class Game extends JPanel implements Runnable, KeyListener, MouseListener
     private int key, x, y;
     private Characters player;
     private final ArrayList <Characters> charList;
-    private final ArrayList <Ranged> attList;
+    private final ArrayList<Projectile> enemyProjectiles;
     private String screen;
-    private final ArrayList <Ranged> rangedWeap;
     private final Timer gameTimer; // Add a single Timer for updates
     private Font customFont;
     private final File saveFile;
@@ -32,6 +31,7 @@ public class Game extends JPanel implements Runnable, KeyListener, MouseListener
     private final ImageIcon logo;
     private final ImageIcon winBg;
     private final ImageIcon loseBg;
+    private final Timer enemyAttackTimer;
     private static final int MOVE_SPEED = 50;
     private final ArrayList<Projectile> projectiles; // List to hold projectiles
 
@@ -42,17 +42,13 @@ public class Game extends JPanel implements Runnable, KeyListener, MouseListener
         this.addKeyListener(this);
         this.addMouseListener(this);
         this.addMouseMotionListener(this);
-        saveFile=new File("saved_file2.0.txt");
+        saveFile=new File("savedfile.txt");
         key =-1;
         x=0;
         y=0;
         charList = setCharList();
         for(final Characters c: charList){
             System.out.println(c);
-        }
-        attList = setAttList();
-        for(final Ranged a: attList){
-            System.out.println(a);
         }
         startBg = new ImageIcon("startscreen.jpg");
         selectionBg = new ImageIcon("startscreen.jpg");
@@ -61,7 +57,13 @@ public class Game extends JPanel implements Runnable, KeyListener, MouseListener
         winBg = new ImageIcon("win.jpg");
         loseBg = new ImageIcon("lose.jpg");
         screen="start";
-        rangedWeap = new ArrayList <Ranged>();
+        enemyProjectiles = new ArrayList<>();
+        enemyAttackTimer = new Timer(3000, e -> triggerEnemyAttacks());
+        enemyAttackTimer.start();
+
+
+        
+        
         enemies = setEs();
         System.out.println(enemies.size());
         projectiles = new ArrayList<>();
@@ -80,6 +82,15 @@ public class Game extends JPanel implements Runnable, KeyListener, MouseListener
         });
         gameTimer.start();
     }
+    private void updateGameState() {
+        // Check if all enemies are defeated
+        if (enemies.isEmpty() && !"win".equals(screen)) {
+            screen = "win"; // Switch to the win screen
+            repaint();
+        }
+        
+    }
+    
 
     public void createFile(){
         try {
@@ -117,7 +128,7 @@ public class Game extends JPanel implements Runnable, KeyListener, MouseListener
             myWriter.write("win!");
         }
         else {
-            myWriter.write("You have "+enemies.size()+" enemies left");
+            myWriter.write("Mewtwo has "+enemies.size()+" health left");
             myWriter.close();
         System.out.println("Successfully wrote to file");
         }
@@ -127,34 +138,103 @@ public class Game extends JPanel implements Runnable, KeyListener, MouseListener
         }
     }
     private void updateProjectiles() {
+        // Handle player projectiles
         for (int i = 0; i < projectiles.size(); i++) {
-            final Projectile proj = projectiles.get(i);
-            proj.move(); // Move the projectile
-            
+            Projectile proj = projectiles.get(i);
+            proj.move(); 
+    
             // Check for collisions with enemies
-            for (final Enemy enemy : enemies) {
+            for (Enemy enemy : enemies) {
                 if (proj.getX() >= enemy.getX() && proj.getX() <= (enemy.getX() + enemy.getW()) &&
                     proj.getY() >= enemy.getY() && proj.getY() <= (enemy.getY() + enemy.getH())) {
                     enemies.remove(enemy); // Remove the enemy on collision
                     projectiles.remove(i); // Remove the projectile on collision
-                    i--; // Adjust index due to removal
-                    break; // Exit the loop after a hit
+                    i--; 
+                    updateGameState();
+                    break; 
                 }
             }
-
+    
             // Remove projectile if it goes off screen
             if (proj.isOffScreen(getWidth())) {
                 projectiles.remove(i);
-                i--; // Adjust index after removal
+                i--; 
+            }
+        }
+    
+        // Handle enemy projectiles
+        for (int i = 0; i < enemyProjectiles.size(); i++) {
+            Projectile proj = enemyProjectiles.get(i);
+            proj.move(); 
+    
+            // Check for collisions with the player
+            if (proj.getX() >= player.getX() && proj.getX() <= (player.getX() + player.getW()) &&
+                proj.getY() >= player.getY() && proj.getY() <= (player.getY() + player.getH())) {
+                // Reduce player's health by 5
+                player.setHealth(player.getHealth() - 20);
+                // Handle damage to the player here
+                enemyProjectiles.remove(i);
+                i--;
+
+                if (player.getHealth() <= 0) {
+                    player.setHealth(0); // Ensure health doesn't go below zero
+                    screen = "lose";     // Switch to the lose screen
+                    repaint();
+                }
+            }
+    
+            // Remove projectile if it goes off screen
+            if (proj.isOffScreen(getWidth())) {
+                enemyProjectiles.remove(i);
+                i--;
             }
         }
     }
+    
     public void shootProjectile() {
+        if (player == null) return; // Ensure player is selected
+    
         final int startX = player.getX() + player.getW() - 400; // Position just outside the player
-        final int startY = player.getY() + player.getH() / 8; // Center vertically
-        
-        projectiles.add(new Projectile(startX, startY));
+        final int startY = player.getY() + player.getH() / 10;  // Center vertically
+        String projectileImage = "";
+    
+        // Determine the projectile image based on the character
+        if (player instanceof Pikachu) {
+            projectileImage = "pikachuattack.png";
+        } else if (player instanceof Venasaur) {
+            projectileImage = "venesaurattack.png";
+        } else if (player instanceof Blastoise) {
+            projectileImage = "blastoiseattack.png";
+        } else if (player instanceof Charizard) {
+            projectileImage = "charizardattack.png";
+        }
+    
+        projectiles.add(new Projectile(startX, startY, projectileImage,-1));
     }
+    public void enemyShoot(Enemy enemy) {
+        if (enemy == null) return;
+    
+        int startX = enemy.getX() + 50; // Position slightly in front of the enemy
+        int startY = enemy.getY() + enemy.getH() / 10; // Center vertically
+        String projectileImage = "shadow.png"; // Enemy's attack image
+    
+        enemyProjectiles.add(new Projectile(startX, startY, projectileImage,1));
+    }
+    
+    public void triggerEnemyAttacks() {
+        for (Enemy enemy : enemies) {
+            if (enemy != null && enemy.isReadyToShoot()) {
+                enemyShoot(enemy); // Make the enemy shoot
+                enemy.resetShootCooldown(); // Reset its shooting cooldown
+                break; // Stop after one enemy shoots
+            }
+        }
+    }
+    
+    
+    
+    
+    
     public Queue <Enemy> setEs(){
         final Queue <Enemy> temp = new LinkedList <>();
         final Random rand = new Random();
@@ -169,6 +249,7 @@ public class Game extends JPanel implements Runnable, KeyListener, MouseListener
             while (true) {Thread.currentThread();
                 Thread.sleep(5);
                 updateProjectiles(); // Call to update projectiles
+                updateGameState();   // Check for win condition
                 repaint();
             }
                 
@@ -182,14 +263,6 @@ public class Game extends JPanel implements Runnable, KeyListener, MouseListener
         temp.add(new Venasaur(500,400));
         temp.add(new Blastoise(900,360));
         temp.add(new Charizard(1300,360));
-        return temp;
-    }
-    public ArrayList <Ranged> setAttList(){
-        final ArrayList <Ranged> temp = new ArrayList <>();
-        temp.add(new Thunder(100,380));
-        temp.add(new Leaf(500,400));
-        temp.add(new Water(900,360));
-        temp.add(new Fire(1300,360));
         return temp;
     }
     public void paint(final Graphics g){
@@ -251,32 +324,48 @@ public class Game extends JPanel implements Runnable, KeyListener, MouseListener
         statsY += 30;
         g2d.drawString(stam, statsX, statsY);
     }
-    public void drawGameScreen(final Graphics g2d) {
+    public void drawGameScreen(Graphics g2d) {
         g2d.drawImage(gameBg.getImage(), 0, 0, getWidth(), getHeight(), this);
         player.drawChar(g2d);
-
-        // Draw projectiles
-        for (final Projectile proj : projectiles) {
+    
+        // Draw player projectiles
+        for (Projectile proj : projectiles) {
             proj.draw(g2d);
         }
-
+    
+        // Draw enemy projectiles
+        for (Projectile proj : enemyProjectiles) {
+            proj.draw(g2d);
+        }
+    
         // Draw enemies
-        if (enemies.peek() != null)
-            (enemies.peek()).drawChar(g2d); 
+        if (enemies.peek() != null) {
+            enemies.peek().drawChar(g2d);
+        }
+        // Display player's health in the top-right corner
+        g2d.setFont(new Font("Pokemon Classic", Font.BOLD, 30)); // Set the font
+        g2d.setColor(Color.WHITE); // Set the text color
+        String healthText = "Health: " + player.getHealth(); // Health text
+        int textWidth = g2d.getFontMetrics().stringWidth(healthText); // Calculate text width
+        g2d.drawString(healthText, getWidth() - textWidth - 20, 40); // Draw text
+
     }
+    
     public void drawWinScreen(final Graphics g2d) {
         g2d.drawImage(winBg.getImage(), 0, 0, getWidth(), getHeight(), this);
         g2d.setFont(new Font("Pokemon Classic", Font.BOLD, 30));
         g2d.setColor(Color.black);
-        g2d.drawString("Winner, winner, PokéDinner!", 950, 400);
+        g2d.drawString("Winner, winner, PokéDinner!", 950, 380);
     }
     public void drawLoseScreen(final Graphics g2d) {
         g2d.drawImage(loseBg.getImage(), 0, 0, getWidth(), getHeight(), this);
         g2d.setFont(new Font("Pokemon Classic", Font.BOLD, 40));
-        g2d.setColor(Color.black);
-        g2d.drawString("You're Trash", 950, 400);
+        g2d.setColor(Color.white);
+        g2d.drawString("Mewtwo's psychic", 100, 100);
+        g2d.drawString("powers were too ", 100, 200);
+        g2d.drawString("strong!", 200, 300);
     }
-    public void attack(){
+    public void Rangedack(){
         if(player.getWeapon() instanceof Ranged){
             //rangedWeap.add(new Ranged(player.getWeapon().getDamage(), player.getWeapon().getDurability(), player.getWeapon().getDPS(), player.getWeapon().getPic()));
         }
@@ -300,8 +389,13 @@ public class Game extends JPanel implements Runnable, KeyListener, MouseListener
         if (key >= KeyEvent.VK_1 && key <= KeyEvent.VK_4) {
             screen = "selection";
             player = charList.get(key - KeyEvent.VK_1); // Get character based on key pressed
+            
         } else if (key == KeyEvent.VK_ENTER) {
             screen = "gameplay";
+            if (player != null) {
+                player.setX(1300);
+                player.setY(600);
+            }
             repaint();
         } else if (key == KeyEvent.VK_W) { // Check if "W" key is pressed
             screen = "win";
@@ -344,10 +438,7 @@ public class Game extends JPanel implements Runnable, KeyListener, MouseListener
 
 
 
-//else if (key==65){
-   // screen = "gameplay"
-    //attack();
-//}
+
 
 
 //DO NOT DELETE
