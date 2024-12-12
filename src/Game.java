@@ -34,6 +34,9 @@ public class Game extends JPanel implements Runnable, KeyListener, MouseListener
     private final Timer enemyAttackTimer;
     private static final int MOVE_SPEED = 50;
     private final ArrayList<Projectile> projectiles; // List to hold projectiles
+    private long startTime;
+    private long endTime;
+
 
 
 
@@ -86,6 +89,9 @@ public class Game extends JPanel implements Runnable, KeyListener, MouseListener
         // Check if all enemies are defeated
         if (enemies.isEmpty() && !"win".equals(screen)) {
             screen = "win"; // Switch to the win screen
+            endTime = System.currentTimeMillis(); // Stop timing
+            long timeTaken = endTime - startTime; // Calculate time taken
+            updateLeaderboard(timeTaken); // Update the leaderboard
             repaint();
         }
         
@@ -137,6 +143,58 @@ public class Game extends JPanel implements Runnable, KeyListener, MouseListener
             e.printStackTrace();
         }
     }
+    private void updateLeaderboard(long timeTaken) {
+        ArrayList<Long> leaderboard = new ArrayList<>();
+        
+        // Read existing leaderboard
+        try (Scanner scanner = new Scanner(saveFile)) {
+            while (scanner.hasNextLong()) {
+                leaderboard.add(scanner.nextLong());
+            }
+        } catch (FileNotFoundException e) {
+            // File might not exist yet, that's fine
+        }
+        
+        // Add new time and sort
+        leaderboard.add(timeTaken);
+        leaderboard.sort(Long::compareTo);
+        
+        // Write updated leaderboard back to file
+        try (FileWriter writer = new FileWriter(saveFile)) {
+            for (long time : leaderboard) {
+                writer.write(time + "\n");
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+    
+    private void displayLeaderboard(Graphics g2d) {
+        g2d.setFont(new Font("Pokemon Classic", Font.BOLD, 20));
+        g2d.setColor(Color.BLACK);
+        g2d.drawString("Leaderboard:", 20, 20);
+        
+        int y = 50;
+        try (Scanner scanner = new Scanner(saveFile)) {
+            int rank = 1;
+            while (scanner.hasNextLong()) {
+                long time = scanner.nextLong();
+                g2d.drawString(rank + ". " + formatTime(time), 20, y);
+                y += 30;
+                rank++;
+            }
+        } catch (FileNotFoundException e) {
+            g2d.drawString("No records yet!", 20, y);
+        }
+    }
+    
+    private String formatTime(long timeMillis) {
+        long seconds = timeMillis / 1000;
+        long minutes = seconds / 60;
+        seconds = seconds % 60;
+        return String.format("%02d:%02d", minutes, seconds);
+    }
+    
     private void updateProjectiles() {
         // Handle player projectiles
         for (int i = 0; i < projectiles.size(); i++) {
@@ -356,6 +414,8 @@ public class Game extends JPanel implements Runnable, KeyListener, MouseListener
         g2d.setFont(new Font("Pokemon Classic", Font.BOLD, 30));
         g2d.setColor(Color.black);
         g2d.drawString("Winner, winner, PokéDinner!", 950, 380);
+
+        displayLeaderboard(g2d); // Display leaderboard
     }
     public void drawLoseScreen(final Graphics g2d) {
         g2d.drawImage(loseBg.getImage(), 0, 0, getWidth(), getHeight(), this);
@@ -396,6 +456,7 @@ public class Game extends JPanel implements Runnable, KeyListener, MouseListener
                 player.setX(1300);
                 player.setY(600);
             }
+            startTime = System.currentTimeMillis(); // Start timing
             repaint();
         } else if (key == KeyEvent.VK_W) { // Check if "W" key is pressed
             screen = "win";

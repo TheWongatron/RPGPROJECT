@@ -1,1 +1,2 @@
-Mewtwo has 99 health left
+win!
+Time: 00 mins, 22 secs, 686 milliseconds
